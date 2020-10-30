@@ -7,6 +7,8 @@ import io
 import re
 import numpy as np
 import scipy.interpolate
+import os.path,os
+import pickle
 
 
 def latlong2gc(latlong):
@@ -26,7 +28,7 @@ class StationData(object):
 		"SOIL_MOISTURE_5","SOIL_MOISTURE_10","SOIL_MOISTURE_20","SOIL_MOISTURE_50",
 		"SOIL_MOISTURE_100","SOIL_TEMP_5","SOIL_TEMP_10","SOIL_TEMP_20","SOIL_TEMP_50"
 	]
-	def __init__(self,fo,filename,interval=1.0):
+	def __init__(self,fo,filename):
 		mo=re.search("\w+\-\w+\-(\w\w).*$",filename)
 		self.state=mo[1]
 		ifn=dict(zip(StationData.fieldnames,range(len(StationData.fieldnames))))
@@ -49,24 +51,34 @@ class StationData(object):
 				timestamps.append(utc_h)
 				values.append((temperature,humidity,precipitation))
 
-		top=max(timestamps)
-		newts=np.arange(0.0,max(timestamps),interval,np.float64)
-		timestamps=np.array(timestamps)
-		values=np.array(values,dtype=np.float64)
-		self.timestamps=newts
-		interpfunc=scipy.interpolate.interp1d(timestamps,values,axis=0,fill_value="extrapolate")
-		self.values=interpfunc(newts)
+
+		self.timestamps=np.array(timestamps)
+		self.values=np.array(values,dtype=np.float64)
+		
 
 class AllStations(object):
-	def __init__(self,fo,interval_hours=1.0):
+
+	def interp_station(self,st,interval):
+		top=max(st.timestamps)
+		newts=np.arange(0.0,max(st.timestamps),interval,np.float64)
+		timestamps=newts
+		interpfunc=scipy.interpolate.interp1d(st.timestamps,st.values,axis=0,fill_value="extrapolate")
+		values=interpfunc(newts)
+		return timestamps,values
+
+	def load_from_zip(self,fo,interval):
 		alls=[]
 		with zipfile.ZipFile(fo) as zf:
 			for nm in zf.namelist():
 				if(not zf.getinfo(nm).is_dir()):
 					with zf.open(nm) as sdata:
 						print("Now loading %s" % (nm))
-						sd=StationData(sdata,nm,interval=interval_hours)
+						sd=StationData(sdata,nm)
+						ts,vs=self.interp_station(sd,interval)
+						sd.timestamps=ts
+						sd.values=vs
 						alls.append(sd)
+
 		mnlen=min([len(st.timestamps) for st in alls])
 		self.timestamps=alls[0].timestamps[:mnlen]
 		self.latlongs=np.array([(st.latlong[0],st.latlong[1]) for st in alls])
@@ -77,6 +89,37 @@ class AllStations(object):
 		self.values=np.zeros((nLL,nTS,nV),dtype=np.float64)
 		for sti,st in enumerate(alls):
 			self.values[sti,:nTS,:]=st.values[:nTS,:]
+		self.interval_hours=interval
+
+	def load_from_cache(self,pth2,pth,interval_hours):
+		if(not os.path.exists(pth2)):
+			return False
+		if(os.path.getmtime(pth2) < os.path.getmtime(pth)):
+			return False
+
+		with np.load(pth2) as npf:
+			self.timestamps=npf["timestamps"]
+			self.latlongs=npf["latlongs"]
+			self.states=npf["states"]
+			self.values=npf["values"]
+			self.interval_hours=npf["interval_hours"]
+			return self.interval_hours == interval_hours
+		return False
+
+	def save_to_cache(self,pth2):
+		np.savez(pth2,timestamps=self.timestamps,latlongs=self.latlongs,states=self.states,values=self.values,interval_hours=self.interval_hours)
+
+	def __init__(self,fo,interval_hours=1.0):
+		if(isinstance(fo,str)):
+			pth=fo
+			pth2=pth+".npz"
+			if(not self.load_from_cache(pth2,pth,interval_hours)):
+				self.load_from_zip(pth,interval_hours)
+				self.save_to_cache(pth2)
+			return
+		else:
+			self.load_from_zip(fo,interval_hours)
+		
 			
 
 if __name__=='__main__':
