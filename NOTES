@@ -1,0 +1,23 @@
+Theory:         Covid can be predicted primarily as a function of HVAC usage
+
+Methodology: establish an HVAC usage index.  It's the amount of cooling and amount of heating in use given an outdoor temperature for each regin.
+
+Compare the temp data vs covid case data.
+
+
+
+
+https://www.eia.gov/consumption/residential/reports/2009/16-states.php
+
+https://www1.ncdc.noaa.gov/pub/data/uscrn/products/hourly02/2020/
+https://www.ncdc.noaa.gov/crn/qcdatasets.html
+
+
+ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/
+
+https://www.ncdc.noaa.gov/data-access/land-based-station-data
+
+Don't use PACIFIC atll.  Recs includes AK and HI in the same region, makes the data useless.
+
+
+https://github.com/nytimes/covid-19-data  This is cumulative

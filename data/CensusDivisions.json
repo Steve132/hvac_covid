@@ -1,0 +1,12 @@
+{
+	"Pacific":["WA","OR","CA","HI","AK"],
+	"MountainNorth":["CO", "ID", "MT", "UT", "WY"],
+	"MountainSouth":["AZ","NM","NV"],
+	"WestNorthCentral":["ND","SD","NE","KS","MN","IA","MO"],
+	"WestSouthCentral":["OK","TX","AR","LA"],
+	"EastNorthCentral":["WI","MI","IL","IN","OH"],
+	"EastSouthCentral":["KY","TN","MS","AL"],
+	"SouthAtlantic":["WV","MD","DC","DE","VA","NC","SC","GA","FL"],
+	"MiddleAtlantic":["NJ","NY","PA"],
+	"NewEngland":["ME","VT","NH","MA","CT","RI"]
+}
