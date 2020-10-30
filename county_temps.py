@@ -51,6 +51,7 @@ class CountyTemperatures(object):
 		out+=tsmeasurements[self._simplices[:,2],:]*self._bary[:,[2]*nV]
 		return out
 
+
 if __name__=="__main__":
 	ct=CountyTemperatures()
 
