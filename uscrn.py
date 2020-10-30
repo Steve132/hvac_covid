@@ -9,7 +9,8 @@ import numpy as np
 import scipy.interpolate
 import os.path,os
 import pickle
-
+from scipy.spatial import Delaunay
+import matplotlib.pyplot as plt
 
 def latlong2gc(latlong):
 	latlong[0]+=90.0
@@ -57,7 +58,6 @@ class StationData(object):
 		
 
 class AllStations(object):
-
 	def interp_station(self,st,interval):
 		top=max(st.timestamps)
 		newts=np.arange(0.0,max(st.timestamps),interval,np.float64)
@@ -77,7 +77,8 @@ class AllStations(object):
 						ts,vs=self.interp_station(sd,interval)
 						sd.timestamps=ts
 						sd.values=vs
-						alls.append(sd)
+						if(sd.state not in ('AK','HI')):
+							alls.append(sd)
 
 		mnlen=min([len(st.timestamps) for st in alls])
 		self.timestamps=alls[0].timestamps[:mnlen]
@@ -119,10 +120,44 @@ class AllStations(object):
 			return
 		else:
 			self.load_from_zip(fo,interval_hours)
+
 		
-			
+class Triangulation(object):
+	def __init__(self,points,points2=None):
+		tri = Delaunay(points)
+		plt.triplot(points[:,1], points[:,0], tri.simplices)
+		plt.plot(points[:,1], points[:,0], 'o')
+		if(points2 is not None):
+			plt.plot(points2[:,1],points2[:,0],'+')
+		plt.show()
+		#tri.simplices[tri.find_simplex(p_valids)]
+
+class AllCounties(object):
+	def LLRow(row):
+		tests=[("pclat10","pclon10"),("pclat00","pclon00"),("clat10","clon10"),("clat00","clon00")]
+		for lats,lons in tests:
+			latsv,lonsv=row[lats],row[lons]
+			print(latsv,lonsv)
+			if((latsv != "NA") and (lonsv != "NA")):
+				return (float(latsv),float(lonsv))
+
+		raise Exception("No ll found!")
+
+	def __init__(self,fo):
+		self.counties=[]
+		self.centers=[]
+		with open(fo,'r',newline='') as fo:
+			dr=csv.DictReader(fo)
+			for row in dr:
+				self.counties.append(row["fips"])
+				print(row)
+				latlong=AllCounties.LLRow(row)
+				self.centers.append(latlong)
+			self.centers=np.array(self.centers)
 
 if __name__=='__main__':
-	print(sys.argv[1])
-
-	ast=AllStations(sys.argv[1])
+	ast=AllStations("raw_data/hourly_uscrn.zip")
+	counties=AllCounties("raw_data/county_centers.csv")
+	#ll=np.array([ll for i,ll in enumerate(ast.latlongs) if ast.states[i] not in ('AK','HI')])
+	ll=ast.latlongs
+	ztr=Triangulation(ll,counties.centers)
