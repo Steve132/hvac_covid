@@ -35,8 +35,29 @@ def get_closest_bary(hull_points,test_points,do_plot=True):
 
 		return simplices,bary
 
-if __name__=='__main__':
-	ast=uscrn.AllStations("raw_data/hourly_uscrn.zip")
-	counties=counties.AllCounties()
-	simplices,bary=get_closest_bary(ast.latlongs,counties.centers)	
+
+class CountyTemperatures(object):
+	def __init__(self):
+		self.ast=uscrn.AllStations("raw_data/hourly_uscrn.zip")
+		self.counties=counties.AllCounties()
+		self._simplices,self._bary=get_closest_bary(self.ast.latlongs,self.counties.centers)	
+		self.timestamps=self.ast.timestamps
+		
+	def fetch_values(self,timestamp_index):
+		tsmeasurements=self.ast.values[:,timestamp_index,:]
+		nV=tsmeasurements.shape[-1]
+		out=tsmeasurements[self._simplices[:,0],:]*self._bary[:,[0]*nV]
+		out+=tsmeasurements[self._simplices[:,1],:]*self._bary[:,[1]*nV]
+		out+=tsmeasurements[self._simplices[:,2],:]*self._bary[:,[2]*nV]
+		return out
+
+if __name__=="__main__":
+	ct=CountyTemperatures()
+
+	print(ct._simplices[100,:])
+	print(ct._bary[100,:])
+
+	for i in range(len(ct.timestamps)):
+		v=ct.fetch_values(i)
+		print(i,v[100])
 	

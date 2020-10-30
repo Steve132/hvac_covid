@@ -39,9 +39,12 @@ class StationData(object):
 				humidity=float(rit[ifn["RH_HR_AVG"]])
 				precipitation=float(rit[ifn["P_CALC"]])
 				temperature=float(rit[ifn["T_HR_AVG"]])
+				
+					
 				utc_h=(utc-jan12020).total_seconds()/3600.0
-				timestamps.append(utc_h)
-				values.append((temperature,humidity,precipitation))
+				if(temperature > -200.0):
+					timestamps.append(utc_h)
+					values.append((temperature,humidity,precipitation))
 
 
 		self.timestamps=np.array(timestamps)
