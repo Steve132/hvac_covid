@@ -1,3 +1,5 @@
+import csv
+import numpy as np
 
 census_divisions={
 	"Pacific":["WA","OR","CA","HI","AK"],
@@ -34,5 +36,42 @@ class TempSettings(object):
 				p+=self.y[i]/self.total
 		return p
 
-def fan_persons(state,f_temp,humidity,precipitation,timestamp):
+class FPContext(object):
+	def __init__(self,loc="data/recs.csv"):
+		with open(loc,'r',newline='') as fo:
+			dr=csv.DictReader(fo)
+			allrows = list(dr)
+			tempdata=np.zeros((28,10))
+			labels=list(allrows[0])[1:]
+
+			regions={}
+
+			for region in labels:
+				seasons={}
+				ri=1
+				for season in ["Summer","Winter"]:
+					times={}
+					for time in ["Day","Night"]:
+						xb=[]
+						yb=[]
+						print(ri)
+						print(allrows[ri])
+						for _ in range(6):
+							xb.append(float(allrows[ri]["TempBegin"]))
+							yb.append(float(allrows[ri][region]))
+							ri+=1
+						dnu=float(allrows[ri][region])
+						heating=(season=="Winter")
+						ri+=1
+						ts=TempSettings(dnu,xb,yb,heating)
+						times[time]=ts
+					seasons[season]=times
+				regions[region]=seasons
+
+			print(regions)
+			
+
+fp=FPContext()
+
+#def fan_persons(state,f_temp,humidity,precipitation,timestamp):
 	
