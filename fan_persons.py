@@ -68,10 +68,20 @@ class FPContext(object):
 					seasons[season]=times
 				regions[region]=seasons
 
-			print(regions)
+			self.regions=regions
 			
 
 fp=FPContext()
 
-#def fan_persons(state,f_temp,humidity,precipitation,timestamp):
-	
+def ts_to_category(ts):
+	season= "Summer" if (ts/24.0 > 120 and ts/24 < 300) else "Winter"
+	hr = int(ts) % 24
+	tod="Day" (if hr >= 7 and hr < 19) else "Night"
+	return season,tod
+
+def fan_persons(state,f_temp,humidity,precipitation,timestamp):
+	season,tod=ts_to_category(timestamp)
+	region=census_divisions_inv[state]
+	return fp.regions[region][season][tod].query(f_temp)
+
+
