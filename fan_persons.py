@@ -27,7 +27,7 @@ class TempSettings(object):
 		self.y=y
 		self.heating=heating
 
-	def query(t):
+	def query(self,t):
 		p=0.0
 		for i,v in enumerate(self.xbrackets):
 			if(self.heating and v > t):
@@ -54,8 +54,6 @@ class FPContext(object):
 					for time in ["Day","Night"]:
 						xb=[]
 						yb=[]
-						print(ri)
-						print(allrows[ri])
 						for _ in range(6):
 							xb.append(float(allrows[ri]["TempBegin"]))
 							yb.append(float(allrows[ri][region]))
@@ -76,7 +74,7 @@ fp=FPContext()
 def ts_to_category(ts):
 	season= "Summer" if (ts/24.0 > 120 and ts/24 < 300) else "Winter"
 	hr = int(ts) % 24
-	tod="Day" (if hr >= 7 and hr < 19) else "Night"
+	tod="Day" if (hr >= 7 and hr < 19) else "Night"
 	return season,tod
 
 def fan_persons(state,f_temp,humidity,precipitation,timestamp):
